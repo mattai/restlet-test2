@@ -1,0 +1,864 @@
+---
+swagger: "2.0"
+info:
+  description: "This describes the Mission API exposed by the ROPS Mission Business\
+    \ App"
+  version: "1.0.0"
+  title: "Mission API"
+paths:
+  /missions:
+    get:
+      tags:
+      - "mission"
+      summary: "Get missions by status"
+      operationId: "getMissions"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "status"
+        in: "query"
+        required: false
+        type: "string"
+        description: "Comma separated list of status"
+      - name: "plannedStartDate"
+        in: "query"
+        required: false
+        type: "string"
+        format: "date-time"
+        description: "planned start date"
+      responses:
+        200:
+          description: "Successful operation"
+          schema:
+            type: "array"
+            items:
+              $ref: "#/definitions/MissionSummary"
+        401:
+          description: "Unauthorized"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    post:
+      tags:
+      - "mission"
+      summary: "Create a mission"
+      operationId: "createMission"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/MissionWrite"
+      responses:
+        200:
+          description: "Successful operation"
+        401:
+          description: "Unauthorized"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+  /missions/{idMission}/acknoledgement:
+    put:
+      tags:
+      - "mission"
+      summary: "Acknoledge mission"
+      operationId: "acknoledgeMission"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "login"
+        in: "header"
+        required: true
+        type: "string"
+        description: "Login of user whose missions are requested"
+      - name: "password"
+        in: "header"
+        required: true
+        type: "string"
+        description: "Base 64 encoded password of user whose missions are requested"
+      responses:
+        200:
+          description: "Successful operation"
+        400:
+          description: "Invalid credentials"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission to acknoledge"
+  /missions/{idMission}:
+    get:
+      tags:
+      - "mission"
+      summary: "Get the detail of a mission"
+      operationId: "getMission"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "view"
+        in: "query"
+        required: true
+        type: "string"
+        description: "View to produce as a result"
+        default: "AGENT"
+        enum:
+        - "AGENT"
+        - "MANAGER"
+      responses:
+        200:
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/MissionDetail"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    put:
+      tags:
+      - "mission"
+      summary: "update a mission"
+      operationId: "updateMission"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/MissionWrite"
+      responses:
+        200:
+          description: "Successful operation"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission"
+  /missions/{idMission}/tasks/{idTask}/start:
+    put:
+      tags:
+      - "mission"
+      summary: "Start a task of a mission"
+      operationId: "startMissionTask"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/TaskProcessingData"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission"
+    - name: "idTask"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the task to start"
+  /missions/{idMission}/tasks/{idTask}/completion:
+    put:
+      tags:
+      - "mission"
+      summary: "Complete a task of a mission"
+      operationId: "completeMissionTask"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/TaskProcessingData"
+      responses:
+        200:
+          description: "Successful operation"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission"
+    - name: "idTask"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the task to complete"
+  /missions/{idMission}/tasks/{idTask}/processings/{processingName}/execution:
+    put:
+      tags:
+      - "mission"
+      summary: "Execute the {processingName} processing of the {idTask} task"
+      operationId: "executeMissionTaskProcessing"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/TaskProcessingData"
+      responses:
+        200:
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/TaskProcessingData"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission"
+    - name: "idTask"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the task to complete"
+    - name: "processingName"
+      in: "path"
+      required: true
+      type: "string"
+      description: "Name of the processing to be executed"
+  /missions/{idMission}/tasks/{idTask}/fileupload:
+    post:
+      tags:
+      - "mission"
+      summary: "Upload a file related to a task of a mission. Put metadata of file\
+        \ in HTTP headers (META_*)"
+      operationId: "uploadMissionTaskFile"
+      consumes:
+      - "application/octet-stream"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          type: "string"
+          format: "binary"
+      responses:
+        201:
+          description: "File uploaded"
+          schema:
+            $ref: "#/definitions/FileId"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission"
+    - name: "idTask"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the task to start"
+  /missions/{idMission}/users/{login}/assignment:
+    put:
+      tags:
+      - "mission"
+      summary: "Assign mission to user"
+      operationId: "assignMissionToUser"
+      produces:
+      - "application/json"
+      parameters: []
+      responses:
+        200:
+          description: "Successful operation"
+        400:
+          description: "invalid login"
+        401:
+          description: "Unauthorized"
+        404:
+          description: "Resource not found"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+    parameters:
+    - name: "idMission"
+      in: "path"
+      required: true
+      type: "integer"
+      format: "int64"
+      description: "Id of the mission"
+    - name: "login"
+      in: "path"
+      required: true
+      type: "string"
+      description: "Login of user"
+  /missions/requestfornew:
+    post:
+      tags:
+      - "mission"
+      summary: "Request for a new mission to create on the fly (typically used for\
+        \ missions of nature \"Return/Turnaround\"). If a READY/RUNNING mission already\
+        \ exists for the input criteria, return the existing mission."
+      operationId: "requestNewMission"
+      consumes:
+      - "application/json"
+      produces:
+      - "application/json"
+      parameters:
+      - name: "body"
+        in: "body"
+        required: true
+        schema:
+          $ref: "#/definitions/MissionCreationRequest"
+      responses:
+        201:
+          description: "Successful operation"
+          schema:
+            $ref: "#/definitions/MissionDetail"
+        400:
+          description: "Bad Request, input parameters could not make possible to process\
+            \ the request"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+        401:
+          description: "Unauthorized"
+        403:
+          description: "Forbidden. User is not allowed to execute this action"
+        404:
+          description: "Resource not found"
+        409:
+          description: "Unable to create the mission because of the current state.\
+            \ Returns the existing mission data."
+          schema:
+            $ref: "#/definitions/MissionDetail"
+        500:
+          description: "Application error"
+          schema:
+            $ref: "#/definitions/ApplicationError"
+definitions:
+  ApplicationError:
+    type: "object"
+    properties:
+      message:
+        type: "string"
+  MissionSummary:
+    type: "object"
+    properties:
+      idMission:
+        type: "integer"
+        format: "int64"
+      plannedStartDatetime:
+        type: "string"
+        format: "date-time"
+      nature:
+        type: "string"
+      status:
+        type: "string"
+      hikerFullName:
+        type: "string"
+      rentalAgreementNumber:
+        type: "string"
+      locationData:
+        type: "string"
+      latitude:
+        type: "string"
+      longitude:
+        type: "string"
+      stationCode:
+        type: "string"
+      stationAddress:
+        type: "string"
+      locationContact:
+        type: "string"
+  MissionDetail:
+    type: "object"
+    properties:
+      idMission:
+        type: "integer"
+        format: "int64"
+      nature:
+        type: "string"
+      status:
+        type: "string"
+      plannedStartDatetime:
+        type: "string"
+        format: "date-time"
+      plannedEndDatetime:
+        type: "string"
+        format: "date-time"
+      effectiveStartDatetime:
+        type: "string"
+        format: "date-time"
+      effectiveEndDatetime:
+        type: "string"
+        format: "date-time"
+      locationData:
+        type: "string"
+      locationContact:
+        type: "string"
+      locationPhoneNumber:
+        type: "string"
+      note:
+        type: "string"
+      rentalAgreementNumber:
+        type: "string"
+      hikerFullName:
+        type: "string"
+      stationCode:
+        type: "string"
+      stationAddress:
+        type: "string"
+      countryCode:
+        type: "string"
+      car:
+        $ref: "#/definitions/CarSummary"
+      customer:
+        $ref: "#/definitions/CustomerDetail"
+      tasks:
+        type: "array"
+        items:
+          $ref: "#/definitions/TaskDetail"
+  MissionCreationRequest:
+    type: "object"
+    required:
+    - "nature"
+    - "stationCode"
+    properties:
+      nature:
+        type: "string"
+        description: "Nature of the requested mission"
+      stationCode:
+        type: "string"
+        description: "Code of the station in which the mission has to be executed"
+      licencePlateNumber:
+        type: "string"
+        description: "The licence plate number of the vehicle concerned by the mission\
+          \ (Fill one of the licence platenumber/vin)"
+      vin:
+        type: "string"
+        description: "The vin number of the vehicle (Fill one of the licence platenumber/vin)"
+  MissionWrite:
+    type: "object"
+    properties:
+      externalId:
+        type: "string"
+        description: "Delivery / Collection Identifier."
+        maxLength: 30
+      expectedStartDate:
+        type: "string"
+        format: "date-time"
+        description: "Expected date & Time for delivery/collection. For delivery,\
+          \ date to which the vehicle must be delivered, For collection, date to which\
+          \ the vehicle must be collected"
+      expectedEndDate:
+        type: "string"
+        format: "date-time"
+        description: "End date & Time for delivery/collection."
+      name:
+        type: "string"
+        description: "the mission's name"
+        maxLength: 30
+      typeCode:
+        type: "string"
+        description: "Delivery or Collection flag EDEL=Delivery / ECOL=Collection"
+        maxLength: 4
+      statusCode:
+        type: "string"
+        description: "Delivery or collection status code (NEW or READY)"
+        maxLength: 20
+      rentalAgreementNumber:
+        type: "integer"
+        format: "int64"
+        description: "Rental agreement number"
+      stationCode:
+        type: "string"
+        description: "the station code"
+        maxLength: 6
+      orderNumber:
+        type: "integer"
+        format: "int32"
+        description: "the order number"
+      note:
+        type: "string"
+        description: "the note instruction"
+        maxLength: 256
+      vehicleUnitNumber:
+        type: "integer"
+        format: "int64"
+        description: "Vehicule Unit Number"
+      vehicleMouvementNumber:
+        type: "integer"
+        format: "int64"
+        description: "Vehicule Mouvement Number"
+      location:
+        $ref: "#/definitions/Location"
+  Location:
+    type: "object"
+    properties:
+      type:
+        type: "string"
+        description: "Postal address or ... flag PAD=Postal Address"
+        maxLength: 3
+      name:
+        type: "string"
+        description: "the location's name"
+        maxLength: 30
+      latitude:
+        type: "string"
+        description: "the latitude"
+        maxLength: 30
+      longitude:
+        type: "string"
+        description: "the longitude"
+        maxLength: 30
+      postalAddress:
+        $ref: "#/definitions/PostalAddress"
+      contacts:
+        type: "array"
+        items:
+          $ref: "#/definitions/Contact"
+      locations:
+        type: "array"
+        items:
+          $ref: "#/definitions/Location"
+  PostalAddress:
+    type: "object"
+    properties:
+      postalCode:
+        type: "string"
+        description: "Postal code for the delivery/Collection address"
+        maxLength: 10
+      streetNumberTypeName:
+        type: "string"
+        description: "street number, type name for the delivery/Collection address"
+        maxLength: 240
+      townName:
+        type: "string"
+        description: "town name for the delivery/Collection address"
+        maxLength: 25
+      isoCountryCode:
+        type: "string"
+        description: "ISO country code for the delivery/Collection address"
+        maxLength: 10
+      countryCode:
+        type: "string"
+        description: "country code for the delivery/Collection address"
+        maxLength: 25
+  Contact:
+    type: "object"
+    properties:
+      name:
+        type: "string"
+        description: "the name of the contact for EDEL/ECOL"
+        maxLength: 30
+      phoneNumber:
+        type: "string"
+        description: "Telefon number of the contact for EDEL/ECOL"
+        maxLength: 15
+      email:
+        type: "string"
+        description: "the email of the contact for EDEL/ECOL"
+        maxLength: 256
+  CarSummary:
+    type: "object"
+    properties:
+      model:
+        type: "string"
+      licencePlateNumber:
+        type: "string"
+      vin:
+        type: "string"
+      status:
+        type: "string"
+        description: "ON_RENTAL, TO_BE_CHECKED, SOLD, AVAILABLE, UNAVAILABLE"
+      color:
+        type: "string"
+      acriss:
+        type: "string"
+      blockedForSale:
+        type: "boolean"
+      lastMovementCode:
+        type: "string"
+  TaskDetail:
+    type: "object"
+    properties:
+      idTask:
+        type: "integer"
+        format: "int64"
+      nature:
+        type: "string"
+      status:
+        type: "string"
+  TaskProcessingData:
+    type: "object"
+    properties:
+      car:
+        $ref: "#/definitions/CarDetail"
+      customerSignature:
+        type: "string"
+      rentalAgentSignature:
+        type: "string"
+      deskAgentSignature:
+        type: "string"
+      customerSigned:
+        type: "boolean"
+      customerEmail:
+        type: "string"
+      customerOtherEmails:
+        type: "array"
+        items:
+          type: "string"
+      rentalAgreement:
+        $ref: "#/definitions/RentalAgreementDetail"
+      charges:
+        type: "array"
+        items:
+          $ref: "#/definitions/ChargeDetail"
+      safetyChecks:
+        type: "array"
+        items:
+          $ref: "#/definitions/SafetyCheck"
+  ChargeDetail:
+    type: "object"
+    properties:
+      label:
+        type: "string"
+      rate:
+        type: "number"
+        format: "float"
+  RentalAgreementDetail:
+    type: "object"
+    properties:
+      pickupDate:
+        type: "string"
+        format: "date-time"
+      pickupStationCode:
+        type: "string"
+      expectedReturnDate:
+        type: "string"
+        format: "date-time"
+      gracePeriodMinutes:
+        type: "integer"
+        format: "int32"
+      returnComplete:
+        type: "boolean"
+      keybox:
+        type: "boolean"
+      changeover:
+        type: "boolean"
+      equipments:
+        type: "array"
+        items:
+          $ref: "#/definitions/EquipmentDetail"
+  CustomerDetail:
+    type: "object"
+    properties:
+      i18nLanguage:
+        type: "string"
+      segment:
+        type: "string"
+      firstName:
+        type: "string"
+      lastName:
+        type: "string"
+      rating:
+        type: "integer"
+        format: "int32"
+  CarDetail:
+    type: "object"
+    properties:
+      mileage:
+        type: "integer"
+        format: "int32"
+      fuelLevel:
+        type: "integer"
+        format: "int32"
+        minimum: 0
+        maximum: 8
+      fuelType:
+        type: "string"
+        example: "DIESEL+"
+      refueledLiters:
+        type: "integer"
+        format: "int32"
+        example: 10
+      refueledPricePerLiter:
+        type: "number"
+        format: "float"
+        example: 1.32
+      insideDirtyness:
+        type: "string"
+        enum:
+        - "NONE"
+        - "LIGHT"
+        - "MODERATE"
+        - "HEAVY"
+      outsideDirtyness:
+        type: "string"
+        enum:
+        - "NONE"
+        - "LIGHT"
+        - "MODERATE"
+        - "HEAVY"
+      accident:
+        $ref: "#/definitions/AccidentDetail"
+      workshop:
+        $ref: "#/definitions/WorkshopDetail"
+      parkingNumber:
+        type: "string"
+        example: "51A"
+      parkingComment:
+        type: "string"
+        example: "Au premier sous-sol"
+      readyToRent:
+        type: "boolean"
+      damages:
+        type: "array"
+        items:
+          $ref: "#/definitions/DamageDetail"
+  AccidentDetail:
+    type: "object"
+    properties:
+      accidentOccurred:
+        type: "boolean"
+      involvedThirdParty:
+        type: "boolean"
+  WorkshopDetail:
+    type: "object"
+    properties:
+      mustGoToWorkshop:
+        type: "boolean"
+      workshops:
+        type: "array"
+        items:
+          $ref: "#/definitions/WorkshopType"
+  WorkshopType:
+    type: "object"
+    properties:
+      code:
+        type: "string"
+        enum:
+        - "BODY_SHOP"
+        - "TECHNICAL_FAILURE"
+        - "MISSING_PART"
+  DamageDetail:
+    type: "object"
+    properties:
+      idDamage:
+        type: "integer"
+        format: "int64"
+      externalDamageId:
+        type: "string"
+      damageType:
+        type: "string"
+      damageSeverity:
+        type: "string"
+      damageElementType:
+        type: "string"
+      area:
+        type: "string"
+      fileId:
+        type: "array"
+        items:
+          type: "string"
+      comment:
+        type: "string"
+  EquipmentDetail:
+    type: "object"
+    properties:
+      id:
+        type: "string"
+      name:
+        type: "string"
+      state:
+        type: "string"
+        enum:
+        - "RETURNED"
+        - "PARTIALLY_RETURNED"
+        - "NOT_RETURNED"
+  SafetyCheck:
+    type: "object"
+    properties:
+      nature:
+        type: "string"
+      processed:
+        type: "boolean"
+  FileId:
+    type: "object"
+    properties:
+      id:
+        type: "string"
